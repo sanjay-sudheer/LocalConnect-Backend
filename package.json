@@ -1,0 +1,33 @@
+{
+  "name": "localconnect-backend",
+  "version": "1.0.0",
+  "description": "LocalConnect Microservices Backend - A platform connecting users with local service providers",
+  "main": "index.js",
+  "scripts": {
+    "start": "node scripts/start-all.js",
+    "dev": "node scripts/dev-all.js",
+    "install-all": "node scripts/install-all.js",
+    "test": "npm run test --workspaces",
+    "lint": "eslint . --ext .js",
+    "gateway": "cd services/api-gateway && npm run dev",
+    "auth": "cd services/auth-service && npm run dev",
+    "services": "cd services/services-service && npm run dev",
+    "booking": "cd services/booking-service && npm run dev",
+    "review": "cd services/review-service && npm run dev",
+    "notification": "cd services/notification-service && npm run dev"
+  },
+  "workspaces": [
+    "services/*"
+  ],
+  "keywords": ["microservices", "local-services", "node.js", "express", "mongodb"],
+  "author": "LocalConnect Team",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "nodemon": "^3.0.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  }
+}

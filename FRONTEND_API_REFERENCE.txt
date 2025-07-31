@@ -1,0 +1,625 @@
+===============================================================================
+                    LOCALCONNECT API REFERENCE - UPDATED ENDPOINTS
+                              CORS Fixed for Port Forwarding
+===============================================================================
+
+🚀 BACKEND STATUS: FULLY OPERATIONAL - ALL ISSUES RESOLVED
+📡 API Gateway: http://localhost:8000 (supports port forwarding & tunneling)
+🔧 All services running and properly configured for frontend integration
+
+✅ MAJOR FIXES APPLIED (July 31, 2025):
+   - FIXED: Request body parsing conflicts causing "request aborted" errors
+   - FIXED: CORS issues for port forwarding and tunneling
+   - FIXED: Rate limiting disabled in development mode
+   - FIXED: Proxy configuration optimized for clean request forwarding
+   - UPDATED: Endpoint corrections applied
+
+⚠️  IMPORTANT ENDPOINT CORRECTIONS:
+   - Changed: /api/booking/* → /api/bookings/*
+   - Changed: /api/review/*  → /api/reviews/*
+   - Changed: /api/notification/* → /api/notifications/*
+
+===============================================================================
+                              QUICK TEST ENDPOINTS
+===============================================================================
+
+🏥 Health Check:
+GET http://localhost:8000/health
+
+🔍 API Documentation:  
+GET http://localhost:8000/api
+
+🧪 CORS Test:
+GET/POST http://localhost:8000/api/debug/cors
+(Use this to test if CORS is working from your frontend)
+
+===============================================================================
+                         CORRECTED API ENDPOINTS
+===============================================================================
+
+🔐 AUTHENTICATION: /api/auth/*
+├── POST /api/auth/register          # Register new user
+├── POST /api/auth/login             # User login  
+├── POST /api/auth/logout            # User logout
+├── GET  /api/auth/profile           # Get user profile
+├── PUT  /api/auth/profile           # Update profile
+├── POST /api/auth/forgot-password   # Request password reset
+└── POST /api/auth/reset-password    # Reset password
+
+🛠️ SERVICES: /api/services/*
+├── GET  /api/services               # Get all services (with filters)
+├── POST /api/services               # Create service (provider only)
+├── GET  /api/services/:id           # Get service by ID
+├── PUT  /api/services/:id           # Update service
+├── GET  /api/services/categories    # Get all categories
+└── GET  /api/services/provider/:id  # Get provider's services
+
+📅 BOOKINGS: /api/bookings/* (UPDATED ENDPOINT)
+├── GET  /api/bookings               # Get user bookings
+├── POST /api/bookings               # Create new booking
+├── GET  /api/bookings/:id           # Get booking by ID
+├── PUT  /api/bookings/:id           # Update booking
+├── PUT  /api/bookings/:id/confirm   # Confirm booking (provider)
+├── PUT  /api/bookings/:id/complete  # Mark completed
+├── GET  /api/bookings/provider/dashboard     # Provider dashboard
+└── GET  /api/bookings/customer/dashboard     # Customer dashboard
+
+⭐ REVIEWS: /api/reviews/* (UPDATED ENDPOINT)
+├── GET  /api/reviews                # Get reviews (with filters)
+├── POST /api/reviews                # Create review
+├── GET  /api/reviews/:id            # Get review by ID
+├── PUT  /api/reviews/:id            # Update review
+├── POST /api/reviews/:id/response   # Provider response
+└── GET  /api/reviews/provider/stats # Provider review stats
+
+🔔 NOTIFICATIONS: /api/notifications/* (UPDATED ENDPOINT)
+├── GET  /api/notifications          # Get user notifications
+├── PUT  /api/notifications/:id/read # Mark as read
+├── POST /api/notifications/welcome  # Send welcome email
+├── POST /api/notifications/booking-confirmation
+├── POST /api/notifications/test-email # Test email function
+└── WS   /api/notifications/ws       # WebSocket connection
+
+===============================================================================
+                           CORS CONFIGURATION FIXED
+===============================================================================
+
+✅ ALL CONNECTION ISSUES RESOLVED:
+   - Body parsing conflicts fixed at API Gateway level
+   - Request aborted errors eliminated
+   - Socket hang up issues resolved
+   - Rate limiting disabled in development mode
+   - Clean proxy forwarding implemented
+
+✅ CORS Issues Resolved:
+   - Trust proxy enabled for port forwarding
+   - Support for VS Code Dev Tunnels (.devtunnels.ms)
+   - Support for ngrok (.ngrok.io)
+   - Support for localhost on any port
+   - Proper CORS headers for all responses
+   - Preflight OPTIONS requests handled
+
+✅ BACKEND STABILITY:
+   - No more connection resets during requests
+   - Proper timeout configurations applied
+   - Enhanced error handling and logging
+   - Development mode optimizations active
+
+✅ Supported Origins:
+   - http://localhost:* (any port)
+   - https://*.devtunnels.ms (VS Code port forwarding)
+   - https://*.ngrok.io (ngrok tunneling)
+   - https://*.tunnel.dev (tunnel.dev)
+   - https://*.loca.lt (localtunnel)
+
+✅ CORS Headers Set:
+   - Access-Control-Allow-Origin: (dynamic based on request)
+   - Access-Control-Allow-Credentials: true
+   - Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS, PATCH
+   - Access-Control-Allow-Headers: Origin, Content-Type, Authorization, etc.
+
+===============================================================================
+                          FRONTEND INTEGRATION GUIDE
+===============================================================================
+
+1. 📡 API BASE URL:
+   const API_BASE_URL = 'http://localhost:8000';
+   // Or use your port forwarded URL: https://xyz.devtunnels.ms
+
+2. 🔧 Axios Configuration (UPDATED):
+   ```javascript
+   import axios from 'axios';
+   
+   const api = axios.create({
+     baseURL: 'http://localhost:8000',
+     timeout: 15000,  // Increased timeout for stability
+     withCredentials: true,  // Important for CORS
+   });
+   
+   // Request interceptor for auth token
+   api.interceptors.request.use(
+     (config) => {
+       const token = localStorage.getItem('token');
+       if (token) {
+         config.headers.Authorization = `Bearer ${token}`;
+       }
+       return config;
+     },
+     (error) => Promise.reject(error)
+   );
+   
+   // Response interceptor for error handling
+   api.interceptors.response.use(
+     (response) => response,
+     (error) => {
+       if (error.response?.status === 401) {
+         localStorage.removeItem('token');
+         window.location.href = '/login';
+       }
+       console.error('API Error:', error.response?.data || error.message);
+       return Promise.reject(error);
+     }
+   );
+   ```
+
+3. 🧪 Test Connection First:
+   ```javascript
+   // Test backend connectivity
+   fetch('http://localhost:8000/health')
+     .then(response => response.json())
+     .then(data => console.log('Backend connected:', data))
+     .catch(error => console.error('Backend connection failed:', error));
+   ```
+
+4. 🔐 Authentication Flow (TESTED & WORKING):
+   ```javascript
+   // Register user - NO MORE REQUEST ABORTED ERRORS
+   const registerUser = async (userData) => {
+     try {
+       const response = await api.post('/api/auth/register', userData);
+       const { user, token } = response.data.data;
+       localStorage.setItem('token', token);
+       return { success: true, user, token };
+     } catch (error) {
+       return { 
+         success: false, 
+         error: error.response?.data?.message || 'Registration failed' 
+       };
+     }
+   };
+   
+   // Login user
+   const loginUser = async (credentials) => {
+     try {
+       const response = await api.post('/api/auth/login', credentials);
+       const { user, token } = response.data.data;
+       localStorage.setItem('token', token);
+       return { success: true, user, token };
+     } catch (error) {
+       return { 
+         success: false, 
+         error: error.response?.data?.message || 'Login failed' 
+       };
+     }
+   };
+   ```
+
+5. 📋 Example API Calls (ALL ENDPOINTS WORKING):
+   ```javascript
+   // Get services with filtering
+   const getServices = async (filters = {}) => {
+     const params = new URLSearchParams(filters);
+     const response = await api.get(`/api/services?${params}`);
+     return response.data;
+   };
+   
+   // Create booking  
+   const createBooking = async (bookingData) => {
+     const response = await api.post('/api/bookings', bookingData);
+     return response.data;
+   };
+   
+   // Get user bookings
+   const getUserBookings = async () => {
+     const response = await api.get('/api/bookings');
+     return response.data;
+   };
+   
+   // Create review
+   const createReview = async (reviewData) => {
+     const response = await api.post('/api/reviews', reviewData);
+     return response.data;
+   };
+   ```
+
+===============================================================================
+                              ERROR HANDLING
+===============================================================================
+
+🚨 All Previous Issues RESOLVED:
+
+1. ✅ FIXED: "Request aborted" errors
+   - ROOT CAUSE: Body parsing conflicts at API Gateway
+   - SOLUTION: Removed body parsing from gateway, let services handle it
+   - STATUS: No longer occurs
+
+2. ✅ FIXED: CORS Error "Access to XMLHttpRequest blocked"
+   - ROOT CAUSE: Improper CORS configuration for port forwarding
+   - SOLUTION: Enhanced CORS setup with dynamic origin handling
+   - STATUS: Works with localhost, devtunnels, ngrok
+
+3. ✅ FIXED: Socket hang up / ECONNRESET errors
+   - ROOT CAUSE: Proxy configuration conflicts
+   - SOLUTION: Simplified proxy setup, removed body rewriting
+   - STATUS: Clean request forwarding
+
+4. ✅ FIXED: Rate limiting timeouts in development
+   - ROOT CAUSE: Aggressive rate limiting during development
+   - SOLUTION: Disabled rate limiting in development mode
+   - STATUS: No rate limit interference
+
+🔧 Current Error Handling Guide:
+
+1. 401 Unauthorized:
+   - Check if Authorization header is included: `Bearer {token}`
+   - Verify token is valid and not expired
+
+2. 404 Not Found:
+   - Use updated endpoints: /api/bookings not /api/booking
+   - Check endpoint spelling and HTTP method
+
+3. 500 Internal Server Error:
+   - Check server logs for detailed error information
+   - Verify all services are running and connected to MongoDB
+
+4. Network/Connection Errors:
+   - Verify backend is running on http://localhost:8000
+   - Check if all microservices have started successfully
+
+===============================================================================
+                           WEBSOCKET CONNECTION  
+===============================================================================
+
+🔗 Real-time Notifications:
+   ```javascript
+   const ws = new WebSocket('ws://localhost:8000/api/notifications/ws?token=your_jwt_token');
+   
+   ws.onmessage = (event) => {
+     const notification = JSON.parse(event.data);
+     console.log('New notification:', notification);
+   };
+   ```
+
+===============================================================================
+                              DETAILED API REQUEST BODIES
+===============================================================================
+
+🔐 AUTHENTICATION ENDPOINTS:
+
+1. POST /api/auth/register
+Content-Type: application/json
+```json
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "password": "password123",
+  "role": "customer",
+  "phone": "+1234567890",
+  "address": {
+    "street": "123 Main St",
+    "city": "New York",
+    "state": "NY",
+    "zipCode": "10001",
+    "country": "USA"
+  }
+}
+```
+
+2. POST /api/auth/login
+Content-Type: application/json
+```json
+{
+  "email": "john@example.com",
+  "password": "password123"
+}
+```
+
+3. PUT /api/auth/profile
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "name": "John Updated",
+  "phone": "+1234567891",
+  "address": {
+    "street": "456 New St",
+    "city": "Boston",
+    "state": "MA",
+    "zipCode": "02101",
+    "country": "USA"
+  },
+  "bio": "Updated bio information"
+}
+```
+
+4. POST /api/auth/forgot-password
+Content-Type: application/json
+```json
+{
+  "email": "john@example.com"
+}
+```
+
+5. POST /api/auth/reset-password
+Content-Type: application/json
+```json
+{
+  "token": "reset_token_from_email",
+  "newPassword": "newPassword123"
+}
+```
+
+🛠️ SERVICES ENDPOINTS:
+
+1. POST /api/services (Provider Only)
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "title": "Professional Plumbing Services",
+  "description": "Expert plumbing services for residential and commercial properties",
+  "category": "Home Maintenance",
+  "subcategory": "Plumbing",
+  "pricing": {
+    "type": "hourly",
+    "basePrice": 75.00,
+    "currency": "USD"
+  },
+  "serviceArea": {
+    "cities": ["New York", "Brooklyn", "Queens"],
+    "radius": 25,
+    "zipCodes": ["10001", "10002", "11201"]
+  },
+  "availability": {
+    "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "timeSlots": ["09:00-17:00"],
+    "timezone": "America/New_York"
+  },
+  "requirements": ["Licensed plumber", "Insurance coverage"],
+  "features": ["Emergency service", "Free estimates", "24/7 availability"],
+  "images": ["image1_url", "image2_url"],
+  "contactInfo": {
+    "phone": "+1234567890",
+    "email": "plumber@example.com"
+  }
+}
+```
+
+2. PUT /api/services/:id
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "title": "Updated Service Title",
+  "description": "Updated description",
+  "pricing": {
+    "type": "fixed",
+    "basePrice": 100.00,
+    "currency": "USD"
+  },
+  "availability": {
+    "days": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    "timeSlots": ["08:00-18:00"],
+    "timezone": "America/New_York"
+  }
+}
+```
+
+📅 BOOKINGS ENDPOINTS:
+
+1. POST /api/bookings
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "serviceId": "66b123456789abcdef123456",
+  "providerId": "66b123456789abcdef123457",
+  "scheduledDate": "2025-08-15",
+  "scheduledTime": "10:00",
+  "duration": 2,
+  "location": {
+    "address": "123 Main St, Apt 4B",
+    "city": "New York",
+    "state": "NY",
+    "zipCode": "10001",
+    "coordinates": {
+      "latitude": 40.7128,
+      "longitude": -74.0060
+    }
+  },
+  "requirements": "Need to fix kitchen sink and bathroom faucet",
+  "contactInfo": {
+    "phone": "+1234567890",
+    "email": "customer@example.com",
+    "preferredContact": "phone"
+  },
+  "urgency": "normal",
+  "estimatedCost": 150.00
+}
+```
+
+2. PUT /api/bookings/:id
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "scheduledDate": "2025-08-16",
+  "scheduledTime": "14:00",
+  "requirements": "Updated requirements - also check water pressure",
+  "status": "rescheduled"
+}
+```
+
+3. PUT /api/bookings/:id/confirm (Provider Only)
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "confirmedDate": "2025-08-15",
+  "confirmedTime": "10:00",
+  "estimatedDuration": 2.5,
+  "finalCost": 175.00,
+  "notes": "Confirmed appointment. Will bring all necessary tools.",
+  "preparationInstructions": "Please ensure water main is accessible"
+}
+```
+
+4. PUT /api/bookings/:id/complete (Provider Only)
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "completionNotes": "Successfully fixed kitchen sink and bathroom faucet. Replaced worn gaskets.",
+  "actualDuration": 2.0,
+  "finalCost": 150.00,
+  "workPerformed": [
+    "Replaced kitchen sink gasket",
+    "Fixed bathroom faucet leak",
+    "Checked water pressure"
+  ],
+  "recommendedMaintenance": "Check gaskets annually",
+  "completionImages": ["completion_image1_url", "completion_image2_url"]
+}
+```
+
+⭐ REVIEWS ENDPOINTS:
+
+1. POST /api/reviews
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "bookingId": "66b123456789abcdef123458",
+  "serviceId": "66b123456789abcdef123456",
+  "providerId": "66b123456789abcdef123457",
+  "rating": 5,
+  "title": "Excellent Plumbing Service",
+  "comment": "The plumber arrived on time, was very professional, and fixed the issues quickly. Highly recommend!",
+  "aspects": {
+    "quality": 5,
+    "timeliness": 5,
+    "communication": 4,
+    "value": 5
+  },
+  "wouldRecommend": true,
+  "images": ["review_image1_url"]
+}
+```
+
+2. PUT /api/reviews/:id
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "rating": 4,
+  "title": "Updated Review Title",
+  "comment": "Updated review comment with more details",
+  "aspects": {
+    "quality": 4,
+    "timeliness": 5,
+    "communication": 4,
+    "value": 4
+  }
+}
+```
+
+3. POST /api/reviews/:id/response (Provider Only)
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "response": "Thank you for the positive feedback! We're glad we could help resolve your plumbing issues quickly.",
+  "responseDate": "2025-08-16T10:00:00Z"
+}
+```
+
+🔔 NOTIFICATION ENDPOINTS:
+
+1. POST /api/notifications/welcome
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "userId": "66b123456789abcdef123459",
+  "email": "user@example.com",
+  "name": "John Doe",
+  "additionalInfo": {
+    "registrationDate": "2025-07-31",
+    "userRole": "customer"
+  }
+}
+```
+
+2. POST /api/notifications/booking-confirmation
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "bookingId": "66b123456789abcdef123458",
+  "customerEmail": "customer@example.com",
+  "providerEmail": "provider@example.com",
+  "bookingDetails": {
+    "serviceTitle": "Plumbing Service",
+    "scheduledDate": "2025-08-15",
+    "scheduledTime": "10:00",
+    "location": "123 Main St, New York, NY 10001",
+    "estimatedCost": 150.00
+  }
+}
+```
+
+3. POST /api/notifications/test-email
+Authorization: Bearer {token}
+Content-Type: application/json
+```json
+{
+  "email": "test@example.com",
+  "type": "welcome",
+  "testData": {
+    "name": "Test User",
+    "customMessage": "This is a test email"
+  }
+}
+```
+
+===============================================================================
+                              QUERY PARAMETERS
+===============================================================================
+
+🛠️ SERVICES FILTERING:
+GET /api/services?search=plumber&category=Home%20Maintenance&city=New%20York&minPrice=50&maxPrice=200&page=1&limit=10&sortBy=rating&sortOrder=desc
+
+📅 BOOKINGS FILTERING:
+GET /api/bookings?status=confirmed&startDate=2025-08-01&endDate=2025-08-31&page=1&limit=10
+
+⭐ REVIEWS FILTERING:
+GET /api/reviews?serviceId=66b123456789abcdef123456&minRating=4&page=1&limit=10&sortBy=createdAt&sortOrder=desc
+
+===============================================================================
+                              STATUS SUMMARY
+===============================================================================
+
+✅ API Gateway: Running on port 8000
+✅ CORS: Fixed for port forwarding & tunneling  
+✅ All Services: Connected and operational
+✅ MongoDB: Connected to all services
+✅ JWT Auth: Working properly
+✅ Email Service: Gmail SMTP configured
+✅ Rate Limiting: Configured with proxy trust
+✅ Error Handling: Comprehensive error responses
+
+🚀 Ready for Frontend Integration!
+
+Last Updated: July 31, 2025
+Backend Version: 1.0.0
+CORS Fix Applied: ✅
